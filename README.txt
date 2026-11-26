@@ -48,5 +48,7 @@ File -> Open Project -> lab4\TimeService
 
 ВЕТКИ РЕПОЗИТОРИЯ
 -----------------
-main      — вариант 1 (калькулятор)
-variant2  — вариант 2 (перевод)
+main                — вариант 1 (калькулятор)
+variant2            — вариант 2 (перевод)
+kafka-dop           — вариант 1 + доп с Kafka
+kafka-dop-variant2  — вариант 2 + доп с Kafka
