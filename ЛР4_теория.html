@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Веб-сервисы: теория ЛР4</title>
+<style>
+:root {
+  --bg: #141810;
+  --card: #1c2218;
+  --line: #3d4a32;
+  --text: #e6eadb;
+  --muted: #b7c3a8;
+  --green: #b4d07a;
+  --green2: #8fb85a;
+  --code: #10140e;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font: 16px/1.55 Georgia, "Times New Roman", serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 48px 28px 80px; }
+.kicker {
+  font: 12px/1.4 system-ui, sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--green2);
+}
+h1 { font-size: 42px; line-height: 1.15; margin: 10px 0 14px; }
+.lead { color: var(--muted); font-size: 18px; margin: 0 0 18px; }
+.hint { color: var(--muted); font-size: 15px; }
+.btns { display: flex; gap: 10px; margin: 16px 0 24px; }
+button {
+  background: transparent; color: var(--green); border: 1px solid var(--green);
+  border-radius: 20px; padding: 8px 16px; cursor: pointer; font: 14px system-ui, sans-serif;
+}
+button:hover { background: #24301c; }
+.toc {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 18px 24px; margin: 24px 0 40px;
+}
+.toc ol { columns: 2; margin: 0; padding-left: 22px; color: var(--green); font: 15px/1.7 system-ui, sans-serif; }
+.toc a { color: var(--green); text-decoration: none; }
+h2 { font-size: 28px; margin: 42px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-size: 20px; margin: 26px 0 8px; }
+code, pre { font-family: Consolas, "Courier New", monospace; }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 14px; color: var(--green); }
+pre {
+  background: var(--code); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; overflow: auto; font-size: 13.5px; line-height: 1.45; color: #dce6cc;
+}
+.file { font: 13px system-ui, sans-serif; color: var(--green2); margin: 18px 0 6px; }
+table { width: 100%; border-collapse: collapse; font: 15px/1.45 system-ui, sans-serif; margin: 12px 0 16px; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; vertical-align: top; text-align: left; }
+th { background: #222a1c; color: var(--green); }
+details { margin: 12px 0 18px; border: 1px solid var(--line); border-radius: 8px; background: #182016; padding: 8px 14px; }
+summary { cursor: pointer; color: var(--green); font: 15px system-ui, sans-serif; }
+details p { color: var(--muted); }
+.q { margin: 18px 0 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="kicker">АИПРП · лабораторная работа № 4 · вариант 2</p>
+<h1>Веб-сервисы и веб-сокет</h1>
+<p class="lead">Пример методички TimeService на Jersey и Tomcat 9, вариант 2 — перевод слова, и чат по веб-сокету, куда встроены и время, и перевод.</p>
+<p class="hint">Под разделами есть «Объяснить проще». Контрольные вопросы методички — в конце.</p>
+<div class="btns">
+  <button type="button" onclick="setOpen(true)">Раскрыть все</button>
+  <button type="button" onclick="setOpen(false)">Свернуть все</button>
+</div>
+<nav class="toc">
+  <h3>Содержание</h3>
+  <ol>
+    <li><a href="#zadanie">Задание</a></li>
+    <li><a href="#rest">REST и Jersey</a></li>
+    <li><a href="#time">Разбор: TimeResource</a></li>
+    <li><a href="#dict">Разбор: перевод</a></li>
+    <li><a href="#webxml">web.xml</a></li>
+    <li><a href="#ws">Веб-сокет</a></li>
+    <li><a href="#run">Запуск</a></li>
+    <li><a href="#voprosy">Контрольные вопросы</a></li>
+  </ol>
+</nav>
+
+<h2 id="zadanie">Задание</h2>
+<p><b>Цель:</b> познакомиться с технологией web-сервисов.</p>
+<p><b>Пример методички:</b> сервис <code>TimeService</code>, класс <code>TimeResource</code>, адрес <code>/api/time</code>, ответ JSON с текущим временем.</p>
+<p><b>Вариант 2:</b> веб-сервис перевода с русского на английский и обратно. Адрес <code>/api/translate?txt=кот</code>.</p>
+<p><b>Часть 2:</b> веб-сокет по образцу чата Tomcat. В сокет добавлен веб-сервис: сообщение <code>time</code> возвращает время, слово из словаря — перевод.</p>
+<p>Стек как в методичке: <code>javax.ws.rs</code>, Jersey, Tomcat 9, порт 8079. Tomcat стоит в <code>D:\devTools\apache-tomcat-9.0.124</code>. Проект — <code>lab4/TimeService</code>.</p>
+<details>
+<summary>+ Объяснить проще</summary>
+<p>Есть два способа поговорить с сервером. Первый — обычный адрес в браузере: спросил время или слово, получил одну записку и связь закрылась. Второй — чат: соединение остаётся открытым, можно писать много сообщений подряд. Время и перевод умеют оба способа.</p>
+</details>
+
+<h2 id="rest">REST и Jersey</h2>
+<p>Веб-сервис в этой лабе — REST. Клиент делает обычный HTTP GET, сервер отвечает текстом JSON. Не SOAP и не WSDL: связь идёт по URL и методу.</p>
+<p>Класс с аннотациями сам по себе порт не слушает. Его публикует библиотека Jersey. В <code>web.xml</code> зарегистрирован сервлет <code>org.glassfish.jersey.servlet.ServletContainer</code>. Он смотрит пакет <code>com.example.service</code>, находит классы с <code>@Path</code> и вешает их на <code>/api/*</code>.</p>
+<table>
+  <tr><th>Аннотация</th><th>Зачем</th></tr>
+  <tr><td><code>@Path("/time")</code></td><td>кусок адреса после <code>/api</code></td></tr>
+  <tr><td><code>@GET</code></td><td>метод срабатывает на GET, не на POST</td></tr>
+  <tr><td><code>@Produces(APPLICATION_JSON)</code></td><td>ответ — JSON, заголовок Content-Type</td></tr>
+  <tr><td><code>@QueryParam("txt")</code></td><td>значение из <code>?txt=кот</code></td></tr>
+</table>
+<p>Полный адрес складывается так: хост и порт Tomcat, имя WAR, шаблон сервлета, путь ресурса.</p>
+<pre>http://localhost:8079/TimeService/api/time
+http://localhost:8079/TimeService/api/translate?txt=кот</pre>
+<details>
+<summary>+ Объяснить проще</summary>
+<p>Jersey — диспетчер. Браузер стучится в <code>/api/что-то</code>. Диспетчер смотрит табличку аннотаций и зовёт нужный метод. <code>@Path</code> — имя кабинета, <code>@GET</code> — «это вопрос, не приказ записать», <code>@Produces</code> — «ответ будет в формате JSON».</p>
+</details>
+
+<h2 id="time">Разбор: TimeResource</h2>
+<p class="file">TimeService/src/main/java/com/example/service/TimeResource.java</p>
+<pre>@Path("/time")
+public class TimeResource {
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getCurrentTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        String currentTime = LocalTime.now().format(formatter);
+        return "{\"time\": \"" + currentTime + "\"}";
+    }
+}</pre>
+<p>Это код из методички без изменений по смыслу. <code>LocalTime.now()</code> берёт время компьютера, формат <code>HH:mm:ss</code>. Строка собирается руками, отдельная библиотека JSON не нужна. Проверенный ответ выглядел как <code>{"time": "19:25:12"}</code>.</p>
+
+<h2 id="dict">Разбор: перевод</h2>
+<p class="file">Dictionary.java и TranslateResource.java</p>
+<p><code>TranslateResource</code> — тот же набор аннотаций, путь <code>/translate</code>. Параметр <code>txt</code> уходит в <code>Dictionary.json</code>.</p>
+<p><code>Dictionary</code> держит две карты: русское → английское и обратно. Слова те же, что в третьей лабе: кот/cat, собака/dog, дом/house и остальные. Сначала ищется русское слово, если нет — английское. Нет в словаре — строка «не найдено».</p>
+<pre>{"word": "кот", "translation": "cat"}
+{"word": "dog", "translation": "собака"}</pre>
+<p>Базы данных в задании варианта 2 нет, поэтому словарь — обычные <code>HashMap</code>, не Derby.</p>
+<details>
+<summary>+ Объяснить проще</summary>
+<p>Две стопки карточек. Спросили «кот» — нашли «cat». Спросили «dog» — нашли «собака». Карточек нет — «не найдено». REST и чат смотрят в одни и те же стопки, чтобы перевод не разъехался.</p>
+</details>
+
+<h2 id="webxml">web.xml</h2>
+<p class="file">src/main/webapp/WEB-INF/web.xml</p>
+<pre>&lt;servlet-class&gt;org.glassfish.jersey.servlet.ServletContainer&lt;/servlet-class&gt;
+&lt;param-name&gt;jersey.config.server.provider.packages&lt;/param-name&gt;
+&lt;param-value&gt;com.example.service&lt;/param-value&gt;
+&lt;url-pattern&gt;/api/*&lt;/url-pattern&gt;</pre>
+<p>Схема Java EE 3.1, как в методичке, потому что Tomcat 9 понимает <code>javax</code>, не <code>jakarta</code>. <code>load-on-startup</code> 1 — Jersey поднимается вместе с приложением, не при первом запросе.</p>
+<p>WAR называется <code>TimeService.war</code>. Tomcat кладёт его в <code>webapps</code> и публикует как <code>/TimeService</code>.</p>
+<p>Зависимости в <code>pom.xml</code>: <code>javax.ws.rs-api</code> 2.1.1 (тот jar, который методичка качает отдельно), Jersey 2.41 (<code>jersey-container-servlet</code> и <code>jersey-hk2</code>), API веб-сокета <code>provided</code> — его даёт сам Tomcat.</p>
+
+<h2 id="ws">Веб-сокет</h2>
+<p class="file">websocket/chat/ChatAnnotation.java и webapp/websocket/chat.xhtml</p>
+<p>Обычный HTTP: запрос — ответ — соединение закрыто. Веб-сокет: сначала HTTP-рукопожатие, потом канал остаётся открытым. Сообщения ходят в обе стороны без нового запроса на каждое слово.</p>
+<p>Сервер:</p>
+<pre>@ServerEndpoint(value = "/websocket/chat")
+public class ChatAnnotation</pre>
+<ul>
+  <li><code>@OnOpen</code> — гость подключился, всем пишем «has joined»;</li>
+  <li><code>@OnMessage incoming</code> — пришло сообщение;</li>
+  <li><code>@OnClose</code> — «has disconnected»;</li>
+  <li><code>broadcast</code> — текст уходит всем открытым сессиям.</li>
+</ul>
+<p>Что делает <code>incoming</code>, вариант 2 плюс пример времени из второй части методички:</p>
+<ul>
+  <li><code>time</code> → <code>Current time: HH:mm:ss</code>;</li>
+  <li>слово из словаря → <code>Перевод: cat</code>;</li>
+  <li>любой другой текст → <code>Guest0: текст</code>.</li>
+</ul>
+<p>Клиент — страница <code>chat.xhtml</code>. В JavaScript:</p>
+<pre>Chat.connect('ws://' + window.location.host + '/TimeService/websocket/chat');
+Chat.socket.send(message);</pre>
+<p>Enter в поле отправляет строку. <code>onmessage</code> дописывает ответ в голубой блок. Адрес сокета — <code>ws://</code>, не <code>http://</code>. Страница: <code>http://localhost:8079/TimeService/websocket/chat.xhtml</code>.</p>
+<p>Проверка клиентом JDK: после «кот» сервер прислал <code>Перевод: cat</code>. После «time» — строку с часами.</p>
+<details>
+<summary>+ Объяснить проще</summary>
+<p>HTTP — звонок в справочную: задал вопрос, положил трубку. Веб-сокет — открытая рация. Все, кто в чате, слышат одну и ту же реплику. Если сказать «time» или «кот», рация отвечает не эхом, а результатом сервиса.</p>
+</details>
+
+<h3>Чем сокет отличается от HTTP</h3>
+<table>
+  <tr><th></th><th>HTTP GET /api/time</th><th>WebSocket /websocket/chat</th></tr>
+  <tr><td>Соединение</td><td>на один запрос</td><td>держится, пока не закроют страницу</td></tr>
+  <tr><td>Кто говорит первым</td><td>только клиент</td><td>обе стороны</td></tr>
+  <tr><td>Адрес</td><td>http://.../api/time</td><td>ws://.../websocket/chat</td></tr>
+  <tr><td>Формат у нас</td><td>JSON</td><td>простая строка в чат</td></tr>
+</table>
+
+<h2 id="run">Запуск</h2>
+<ol>
+  <li>Tomcat 9: <code>D:\devTools\apache-tomcat-9.0.124</code>, порт 8079, <code>JAVA_HOME</code> в <code>bin\setenv.bat</code>.</li>
+  <li>WAR <code>TimeService.war</code> лежит в <code>webapps</code>.</li>
+  <li>Старт: <code>bin\startup.bat</code>. Стоп: <code>bin\shutdown.bat</code>.</li>
+  <li>В NetBeans: Open Project <code>lab4\TimeService</code>. Сервер добавлять тот же каталог Tomcat 9, не десятый.</li>
+</ol>
+
+<h2 id="voprosy">Контрольные вопросы</h2>
+<p class="q"><b>1. Что такое управляемый web-сервис, как он связывается с клиентом?</b></p>
+<p>Управляемый сервис — класс, который контейнер сам создаёт и публикует. Мы не пишем <code>main</code> и не слушаем порт. Tomcat поднимает Jersey-сервлет, Jersey по аннотациям находит <code>TimeResource</code> и <code>TranslateResource</code>.</p>
+<p>Связь с клиентом — HTTP. Клиент открывает URL. Метод GET попадает в метод с <code>@GET</code>. Параметры приходят из строки запроса (<code>txt</code>). Ответ — тело HTTP, у нас JSON, тип задаёт <code>@Produces</code>. После ответа это соединение для данного запроса заканчивается.</p>
+
+<p class="q"><b>2. Как создать web-сервис?</b></p>
+<ol>
+  <li>Проект Java Web / Maven WAR.</li>
+  <li>Пакет <code>com.example.service</code>, класс с <code>@Path</code>, <code>@GET</code>, <code>@Produces</code>.</li>
+  <li>Библиотека Jersey и <code>javax.ws.rs-api</code>.</li>
+  <li><code>web.xml</code>: сервлет <code>ServletContainer</code>, параметр <code>jersey.config.server.provider.packages</code>, адрес <code>/api/*</code>.</li>
+  <li>Собрать WAR, положить в <code>webapps</code> Tomcat 9, открыть <code>http://localhost:8079/TimeService/api/time</code>.</li>
+</ol>
+
+<p class="q"><b>3. Что такое веб-сокет?</b></p>
+<p>Протокол поверх TCP для постоянной двусторонней связи. Браузер открывает его объектом <code>WebSocket</code>. Сервер помечает класс <code>@ServerEndpoint</code>. После рукопожатия обе стороны шлют текстовые кадры, не оформляя каждый как новый HTTP-запрос. В лабе это чат: вход, реплики, время и перевод рассылаются всем подключённым.</p>
+
+<p class="q"><b>4. Как создать веб-сокетное соединение?</b></p>
+<p>Сервер: класс <code>ChatAnnotation</code>, <code>@ServerEndpoint("/websocket/chat")</code>, методы <code>@OnOpen</code>, <code>@OnMessage</code>, <code>@OnClose</code>. Класс лежит в WAR, Tomcat сам его публикует.</p>
+<p>Клиент: страница <code>chat.xhtml</code>, в скрипте <code>new WebSocket("ws://хост/TimeService/websocket/chat")</code>. По Enter вызывается <code>socket.send</code>. Входящие кадры читает <code>onmessage</code>.</p>
+
+<p class="q"><b>5. Чем веб-сокет отличается от HTTP-запроса?</b></p>
+<p>HTTP-запрос короткоживущий: клиент спросил <code>/api/time</code>, получил JSON, канал закрыт. Сервер сам не пишет клиенту, пока тот снова не спросит. Веб-сокет после открытия живёт долго, сервер может прислать сообщение первым (у нас «Guest has joined»), и одно сообщение видят все участники чата. Адрес другой: <code>ws://</code> вместо <code>http://</code>. Общее только то, что сокет начинается с HTTP-рукопожатия Upgrade.</p>
+</div>
+<script>
+function setOpen(v) {
+  document.querySelectorAll("details").forEach(function (d) { d.open = v; });
+}
+</script>
+</body>
+</html>
