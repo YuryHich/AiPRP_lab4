@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Kafka: консьюмер</title>
+    <style>
+        body { font-family: Segoe UI, Arial, sans-serif; margin: 24px; max-width: 900px; }
+        .info { background: #f3f3f3; padding: 8px 12px; border-radius: 6px; font-family: Consolas, monospace; margin-bottom: 6px; }
+        .msg { border: 1px solid #ccc; border-radius: 6px; margin: 12px 0; overflow: hidden; }
+        .head { background: #e8eef7; padding: 6px 10px; font-size: 13px; font-family: Consolas, monospace; }
+        .body { padding: 10px; }
+        iframe { width: 100%; border: 0; min-height: 60px; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Kafka: консьюмер</h1>
+    <p><a href="../index.html">← на главную</a> | <a href="producer.html">страница продюсера</a> |
+       <a href="../websocket/chat.xhtml">чат (туда тоже приходят сообщения)</a></p>
+    <div class="info" id="info">загрузка настроек...</div>
+    <div class="info" id="status">-</div>
+    <p>Получено сообщений: <b id="count">0</b> (страница обновляется каждые 2 секунды)</p>
+    <div id="list"></div>
+
+<script>
+    fetch('../api/kafka/info').then(r => r.json()).then(i => {
+        document.getElementById('info').textContent =
+            'узел: ' + i.node + ' | роль: ' + i.role + ' | группа: ' + i.group + ' | брокеры: ' + i.bootstrap;
+    });
+
+    let shown = '';
+
+    function render(m) {
+        const box = document.createElement('div');
+        box.className = 'msg';
+        const head = document.createElement('div');
+        head.className = 'head';
+        head.textContent = m.time + ' | от: ' + m.from + ' | тип: ' + m.type
+            + ' | партиция: ' + m.partition + ' | offset: ' + m.offset;
+        const body = document.createElement('div');
+        body.className = 'body';
+        if (m.type === 'html') {
+            const frame = document.createElement('iframe');
+            frame.setAttribute('sandbox', 'allow-same-origin');
+            frame.srcdoc = '<meta charset="UTF-8">' + m.value;
+            frame.onload = () => { frame.style.height = (frame.contentDocument.body.scrollHeight + 20) + 'px'; };
+            body.appendChild(frame);
+        } else {
+            const pre = document.createElement('pre');
+            pre.textContent = m.value;
+            body.appendChild(pre);
+        }
+        box.appendChild(head);
+        box.appendChild(body);
+        return box;
+    }
+
+    function refresh() {
+        fetch('../api/kafka/messages').then(r => r.json()).then(data => {
+            document.getElementById('status').textContent = 'состояние: ' + data.status;
+            document.getElementById('count').textContent = data.messages.length;
+            const key = data.messages.map(m => m.partition + ':' + m.offset).join(',');
+            if (key === shown) return;
+            shown = key;
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            data.messages.forEach(m => list.appendChild(render(m)));
+        }).catch(e => { document.getElementById('status').textContent = 'ошибка: ' + e; });
+    }
+
+    refresh();
+    setInterval(refresh, 2000);
+</script>
+</body>
+</html>

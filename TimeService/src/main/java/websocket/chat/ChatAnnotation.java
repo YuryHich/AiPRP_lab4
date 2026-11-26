@@ -60,6 +60,11 @@ public class ChatAnnotation {
         System.out.println("Chat Error: " + t);
     }
 
+    /** Сообщение из Kafka уходит всем, у кого открыт чат. */
+    public static void publish(String msg) {
+        broadcast(msg);
+    }
+
     private static String currentTime() {
         return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
     }
