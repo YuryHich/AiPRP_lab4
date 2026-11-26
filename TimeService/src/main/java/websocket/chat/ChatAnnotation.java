@@ -1,6 +1,6 @@
 package websocket.chat;
 
-import com.example.service.Dictionary;
+import com.example.service.Calculator;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -47,9 +47,12 @@ public class ChatAnnotation {
             broadcast("Current time: " + currentTime());
             return;
         }
-        String translation = Dictionary.translate(text);
-        if (text.length() > 0 && !"не найдено".equals(translation) && !translation.equals("")) {
-            broadcast("Перевод: " + translation);
+        if (Calculator.isExpression(text)) {
+            try {
+                broadcast("Результат: " + text + " = " + Calculator.format(Calculator.evaluate(text)));
+            } catch (IllegalArgumentException e) {
+                broadcast("Ошибка: " + e.getMessage());
+            }
             return;
         }
         broadcast(String.format("%s: %s", nickname, text));

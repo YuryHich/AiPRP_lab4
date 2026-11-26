@@ -1,6 +1,6 @@
 ЛАБОРАТОРНАЯ РАБОТА № 4
-Веб-сервис TimeService и веб-сокет
-==================================
+Веб-сервис TimeService и веб-сокет, вариант 1 (калькулятор)
+===========================================================
 
 Tomcat 9 лежит на диске D, порт 8079:
   D:\devTools\apache-tomcat-9.0.124
@@ -13,15 +13,15 @@ Tomcat 9 лежит на диске D, порт 8079:
 http://localhost:8079/TimeService/api/time
   {"time":"HH:mm:ss"}
 
-http://localhost:8079/TimeService/api/translate?txt=кот
-  {"word":"кот","translation":"cat"}
+http://localhost:8079/TimeService/api/calc?expr=2+4*7
+  {"expression": "2+4*7", "result": 30}
 
-http://localhost:8079/TimeService/api/translate?txt=dog
-  перевод «собака»
+http://localhost:8079/TimeService/api/calc?expr=1/0
+  {"expression": "1/0", "error": "деление на ноль"}
 
 http://localhost:8079/TimeService/websocket/chat.xhtml
   time — текущее время
-  кот / dog — перевод
+  2+4*7 — результат вычисления
   любой другой текст — реплика в чат
 
 ЕСЛИ TOMCAT НЕ ЗАПУЩЕН
@@ -42,3 +42,8 @@ File -> Open Project -> lab4\TimeService
 
 Собрать заново:
   D:\devTools\netbeans\java\maven\bin\mvn.cmd -f lab4\TimeService\pom.xml package
+
+ВЕТКИ РЕПОЗИТОРИЯ
+-----------------
+main      — вариант 1 (калькулятор)
+variant2  — вариант 2 (перевод)
