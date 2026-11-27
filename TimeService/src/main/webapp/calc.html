@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Калькулятор</title>
+    <style>
+        body { background: #fff; color: #111; font-family: Segoe UI, Arial, sans-serif; margin: 24px; }
+        #out { font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Калькулятор</h1>
+    <p>Любое бесскобочное выражение: числа и знаки <b>+ − * /</b>.
+       Сначала выполняются умножение и деление, потом сложение и вычитание.
+       <code>2+4*7</code> — только пример из задания, можно вписать свой.</p>
+    <form id="form" action="api/calc" method="get">
+        <input id="expr" name="expr" size="40" value="2+4*7" autofocus>
+        <button type="submit">Посчитать</button>
+    </form>
+    <p id="out"></p>
+    <p><a href="index.html">на главную</a></p>
+<script>
+    document.getElementById('form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var expr = document.getElementById('expr').value;
+        var out = document.getElementById('out');
+        fetch('api/calc?expr=' + encodeURIComponent(expr))
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.error) {
+                    out.textContent = data.expression + ' — ошибка: ' + data.error;
+                } else {
+                    out.textContent = data.expression + ' = ' + data.result;
+                }
+            })
+            .catch(function (error) { out.textContent = 'ошибка: ' + error; });
+    });
+</script>
+</body>
+</html>

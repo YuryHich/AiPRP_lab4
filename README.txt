@@ -13,7 +13,11 @@ Tomcat 9 лежит на диске D, порт 8079:
 http://localhost:8079/TimeService/api/time
   {"time":"HH:mm:ss"}
 
+http://localhost:8079/TimeService/calc.html
+  поле ввода: любое бесскобочное выражение, не только 2+4*7
+
 http://localhost:8079/TimeService/api/calc?expr=2+4*7
+  тот же сервис напрямую, пример из задания
   {"expression": "2+4*7", "result": 30}
 
 http://localhost:8079/TimeService/api/calc?expr=1/0
